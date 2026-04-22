@@ -1,0 +1,208 @@
+<%
+Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
+
+LOCAL lcConnStr, lnHandle, lnResult, lnId
+LOCAL lcTitle, lcContent
+
+lcTitle = ""
+lcContent = ""
+
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lnHandle = SQLSTRINGCONNECT(lcConnStr)
+
+lnId = VAL(Request.QueryString("id"))
+
+IF lnId > 0
+    lnResult = SQLEXEC(lnHandle, "SELECT CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, content FROM Articles WHERE id = ?lnId", "curArticle")
+    IF lnResult > 0 AND NOT EOF("curArticle")
+        lcTitle = curArticle.title
+        lcContent = curArticle.content
+        USE IN curArticle
+    ENDIF
+ENDIF
+%>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <title><%= IIF(lnId > 0, 'EDIT ARTICLE', 'WRITE ARTICLE') %></title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/quill.snow.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&family=Black+Han+Sans&family=Jua&family=Do+Hyeon&family=Gothic+A1:wght@400;700&display=swap" rel="stylesheet">
+    <link href="css/pretendard-gov.min.css" rel="stylesheet">
+        <style>
+        body, input, button, select, textarea, th, td { font-family: 'Pretendard GOV', sans-serif; }
+        .ql-editor { font-size: 15px; white-space: normal; min-height: 400px; background-color: white; }
+        #detail .content-body { font-family: 'Pretendard GOV', sans-serif; }
+        #detail h4, #detail span, #clist .article-title, #write .form-control#title { font-family: 'Pretendard GOV', sans-serif !important; }
+        .ql-toolbar.ql-snow { background-color: #f8f9fa; }
+        /* Quill Font Family Mapping */
+                .ql-editor .ql-font-pretendard-gov, .ql-font-pretendard-gov { font-family: 'Pretendard GOV', sans-serif !important; }
+        .ql-editor .ql-font-noto-sans-kr, .ql-font-noto-sans-kr { font-family: 'Noto Sans KR', sans-serif !important; }
+        .ql-editor .ql-font-noto-serif-kr, .ql-font-noto-serif-kr { font-family: 'Noto Serif KR', sans-serif !important; }
+        .ql-editor .ql-font-nanum-gothic, .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif !important; }
+        .ql-editor .ql-font-nanum-myeongjo, .ql-font-nanum-myeongjo { font-family: 'Nanum Myeongjo', sans-serif !important; }
+        .ql-editor .ql-font-nanum-gothic-coding, .ql-font-nanum-gothic-coding { font-family: 'Nanum Gothic Coding', monospace !important; }
+        .ql-editor .ql-font-black-han-sans, .ql-font-black-han-sans { font-family: 'Black Han Sans', sans-serif !important; }
+        .ql-editor .ql-font-jua, .ql-font-jua { font-family: 'Jua', sans-serif !important; }
+        .ql-editor .ql-font-do-hyeon, .ql-font-do-hyeon { font-family: 'Do Hyeon', sans-serif !important; }
+        .ql-editor .ql-font-gothic-a1, .ql-font-gothic-a1 { font-family: 'Gothic A1', sans-serif !important; }
+        .ql-editor .ql-font-malgun-gothic, .ql-font-malgun-gothic { font-family: 'Malgun Gothic', sans-serif !important; }
+        /* Quill Dropdown Korean Labels */
+        .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item::before { font-size: 13px; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="pretendard-gov"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="pretendard-gov"]::before { content: 'Pretendard GOV'; font-family: 'Pretendard GOV'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-sans-kr"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-kr"]::before { content: 'Noto Sans KR'; font-family: 'Noto Sans KR'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-serif-kr"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-serif-kr"]::before { content: 'Noto Serif KR'; font-family: 'Noto Serif KR'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nanum-gothic"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nanum-gothic"]::before { content: 'Nanum Gothic'; font-family: 'Nanum Gothic'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nanum-myeongjo"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nanum-myeongjo"]::before { content: 'Nanum Myeongjo'; font-family: 'Nanum Myeongjo'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nanum-gothic-coding"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nanum-gothic-coding"]::before { content: 'Nanum Gothic Coding'; font-family: 'Nanum Gothic Coding'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="black-han-sans"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="black-han-sans"]::before { content: 'Black Han Sans'; font-family: 'Black Han Sans'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="jua"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="jua"]::before { content: 'Jua'; font-family: 'Jua'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="do-hyeon"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="do-hyeon"]::before { content: 'Do Hyeon'; font-family: 'Do Hyeon'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="gothic-a1"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="gothic-a1"]::before { content: 'Gothic A1'; font-family: 'Gothic A1'; }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="malgun-gothic"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="malgun-gothic"]::before { content: 'Malgun Gothic'; font-family: 'Malgun Gothic'; }
+        .ql-snow .ql-picker.ql-font { width: 145px; }
+        /* Quill Size Dropdown Labels */
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: '10px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: '12px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: '14px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { content: '16px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: '18px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: '20px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: '24px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: '28px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before { content: '32px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before { content: '36px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="48px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before { content: '48px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="72px"]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="72px"]::before { content: '72px'; }
+            body.swal2-shown { overflow-y: scroll !important; padding-right: 0 !important; }
+            .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
+            .ql-container.ql-snow { border: 1px solid #ccc !important; border-top: none !important; } .ql-toolbar.ql-snow { border: 1px solid #ccc !important; }
+    </style>
+</head>
+<body class="bg-light p-4">
+
+<div class="card mb-4" id="write">
+        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="fw-bold my-auto"><%= IIF(lnId > 0, 'EDIT ARTICLE', 'WRITE ARTICLE') %></div>
+                <div class="d-flex gap-1">
+            <button type="button" class="btn btn-sm btn-primary btn-board fw-bold" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
+            <a href="board_list.fwx" class='btn btn-sm btn-secondary btn-board fw-bold'>LIST</a>
+        </div>
+    </div>
+    <div class="card-body mb-5">
+        <form action="board_action.fwx" method="POST" id="writeForm" onsubmit="return validateForm()">
+            <input type="hidden" name="action" value="save">
+            <input type="hidden" name="id" value="<%= TRANSFORM(lnId) %>">
+            <input type="hidden" name="content" id="content_hidden">
+
+            <div class="row px-2 mb-3">
+                <div class="col-md-12 px-1">
+                    <label class="small fw-bold" for="title">Title</label>
+                    <input type="text" class="form-control" name="title" id="title" value="<%= TRANSFORM(lcTitle) %>" required>
+                </div>
+            </div>
+
+            <div class="row px-2 mb-4">
+                <div class="col-md-12 px-1">
+                    <label class="small fw-bold" for="content">Content</label>
+                    <div id="quilleditor"></div><textarea id="raw_content" style="display:none;"><%= lcContent %></textarea>
+                </div>
+                </div>
+    
+            </form>
+        </div>
+        <div class="text-center pt-0 pb-3">
+            <button type="button" class="btn btn-sm btn-primary btn-board fw-bold mx-1" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
+            <a href="board_list.fwx" class="btn btn-sm btn-secondary btn-board fw-bold mx-1">LIST</a>
+        </div>
+    </div>
+
+<script src="js/sweetalert2@11.js"></script>
+<script src="js/quill.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let Font = Quill.import('formats/font');
+        Font.whitelist = ['pretendard-gov', 'noto-sans-kr', 'noto-serif-kr', 'nanum-gothic', 'nanum-myeongjo', 'nanum-gothic-coding', 'black-han-sans', 'jua', 'do-hyeon', 'gothic-a1', 'malgun-gothic'];
+        Quill.register(Font, true);
+
+        let SizeStyle = Quill.import('attributors/style/size');
+        SizeStyle.whitelist = ['10px','12px','14px','16px','18px','20px','24px','28px','32px','36px','48px','72px'];
+        Quill.register(SizeStyle, true);
+
+        window.quill = new Quill('#quilleditor', {
+            theme: 'snow',
+            placeholder: 'Write your article here...',
+            modules: {
+                toolbar: [
+                    [{ 'font': ['pretendard-gov', 'noto-sans-kr', 'noto-serif-kr', 'nanum-gothic', 'nanum-myeongjo', 'nanum-gothic-coding', 'black-han-sans', 'jua', 'do-hyeon', 'gothic-a1', 'malgun-gothic'] }],
+                    [{ 'size': ['10px','12px','14px','16px','18px','20px','24px','28px','32px','36px','48px','72px'] }],
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    ['blockquote', 'code-block'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'direction': 'rtl' }],
+                    [{ 'align': [] }],
+                    ['link', 'image', 'video'],
+                    ['clean']
+                ]
+            }
+        });
+
+      // 기존 내용 로드
+      var rawContent = document.getElementById('raw_content').value;
+      if (rawContent.trim().length > 0) {
+          window.quill.root.innerHTML = rawContent;
+      }
+    });
+
+    function validateForm() {
+        var title = document.getElementById('title').value.trim();
+        if(title.length < 2 || title.length > 255) {
+            Swal.fire({ position: 'top-end', icon: 'warning', title: '제목은 2자 이상 255자 이내로 입력해주세요.', showConfirmButton: false, timer: 2000, toast: true });
+            return false;
+        }
+        
+        var content = window.quill.root.innerHTML;
+        var stripped = window.quill.getText().trim();
+        if(stripped.length === 0) {
+            Swal.fire({ position: 'top-end', icon: 'warning', title: '내용을 입력해주세요.', showConfirmButton: false, timer: 2000, toast: true });
+            return false;
+        }
+
+        document.getElementById('content_hidden').value = content;
+        return true;
+    }
+</script>
+<% SQLDISCONNECT(lnHandle) %>
+</body>
+</html>

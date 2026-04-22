@@ -1,0 +1,187 @@
+<%
+Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
+
+LOCAL lcConnStr, lnHandle, lnResult, lcSQL, lcKeyword, lcSafeKeyword
+LOCAL lnPage, lnLimit, lnOffset, lnTotal, lnTotalPages
+LOCAL ARRAY laError[1]
+
+SQLSETPROP(0, "DispLogin", 3)
+
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lnHandle = SQLSTRINGCONNECT(lcConnStr)
+
+* 에러 발생 시 구체적인 원인을 화면에 출력하도록 보강
+IF lnHandle < 0
+    AERROR(laError)
+    Response.Write("<h3>DB Connection Error</h3>")
+    Response.Write("<p style='color:red;'>" + TRANSFORM(laError[2]) + "</p>")
+    RETURN
+ENDIF
+
+lcKeyword = Request.QueryString("keyword")
+
+lnPage = VAL(Request.QueryString("page"))
+IF lnPage < 1
+    lnPage = 1
+ENDIF
+
+lnLimit = 20
+lnOffset = (lnPage - 1) * lnLimit
+lcSafeKeyword = STRTRAN(lcKeyword, "'", "\'")
+
+lcSQLCount = "SELECT COUNT(*) AS cnt FROM Articles WHERE 1=1"
+IF NOT EMPTY(lcKeyword)
+    lcSQLCount = lcSQLCount + " AND (title LIKE '%" + lcSafeKeyword + "%' OR content LIKE '%" + lcSafeKeyword + "%')"
+ENDIF
+
+lnResult = SQLEXEC(lnHandle, lcSQLCount, "curCount")
+IF lnResult > 0
+    lnTotal = VAL(TRANSFORM(curCount.cnt))
+    USE IN curCount
+ELSE
+    lnTotal = 0
+ENDIF
+lnTotalPages = CEILING(lnTotal / lnLimit)
+
+lcSQL = "SELECT CAST(id AS CHAR(20)) AS id, " + ;
+        "CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, " + ;
+        "CAST(user_id AS CHAR(20)) AS user_id, " + ;
+        "CAST(views AS CHAR(20)) AS views, " + ;
+        "CAST(createDt AS CHAR(20)) AS createDt " + ;
+        "FROM Articles WHERE 1=1"
+IF NOT EMPTY(lcKeyword)
+    lcSQL = lcSQL + " AND (title LIKE '%" + lcSafeKeyword + "%' OR content LIKE '%" + lcSafeKeyword + "%')"
+ENDIF
+lcSQL = lcSQL + " ORDER BY CAST(id AS UNSIGNED) DESC LIMIT " + TRANSFORM(lnOffset) + ", " + TRANSFORM(lnLimit)
+
+lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
+%>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <title>ARTICLE LISTS</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+        <script>
+        function goDetail(id) {
+            location.href = "board_view.fwx?id=" + id;
+        }
+        function deleteItem(event, id) {
+            event.stopPropagation();
+            Swal.fire({
+                title: '삭제 확인',
+                text: '정말로 삭제하시겠습니까?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '삭제',
+                cancelButtonText: '취소',
+                scrollbarPadding: false
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    location.href = 'board_action.fwx?action=delete&id=' + id;
+                }
+            });
+        }
+    </script>
+    <link rel="stylesheet" as="style" crossorigin href="css/pretendard-gov.min.css" />
+    <style>
+        body, input, button, select, textarea, th, td { font-family: 'Pretendard GOV', sans-serif; }
+        body { font-family: 'Pretendard GOV', sans-serif; }
+        #clist .article-title { font-family: 'Pretendard GOV', sans-serif !important; }
+            body.swal2-shown { overflow-y: scroll !important; padding-right: 0 !important; }
+            .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
+    </style>
+    <script src="js/sweetalert2@11.js"></script>
+</head>
+<body class="bg-light p-4">
+
+<div class="card mb-4" id="clist">
+    <div class="card-header">
+        <div class="d-flex bd-highlight">
+            <div class="me-auto fw-bold my-auto">ARTICLE LISTS</div>
+            <div>
+                <a href="board_write.fwx" class='btn btn-sm btn-dark btn-board'>ADD</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class='d-flex align-items-center py-2 mb-2'>
+            <span class='small text-muted text-nowrap me-2'>총 <strong class='text-dark'><%= TRANSFORM(lnTotal) %>건</strong></span>
+            <div class='input-group input-group-sm'>
+                <form action="board_list.fwx" method="GET" class="d-flex w-100 m-0 p-0">
+                    <input type="text" name="keyword" class='form-control' placeholder='Title, Content ...' value="<%= lcKeyword %>">
+                    <button type="submit" class='btn btn-sm btn-primary btn-board'>SEARCH</button>
+                </form>
+            </div>
+        </div>
+        
+        <table class="table table-sm table-bordered text-center table-hover">
+            <thead>
+                <tr>
+                    <th width="80">No</th>
+                    <th>Title</th>
+                    
+                    <th width="80">Views</th>
+                    <th width="120">Date</th>
+                    <th width="80">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <%
+                IF lnResult < 0
+                LOCAL ARRAY laError[1]
+                AERROR(laError)
+                Response.Write("<tr><td colspan='6' class='text-danger'>DB 오류: " + TRANSFORM(laError[2]) + "</td></tr>")
+            ELSE
+                    SELECT curList
+                    IF EOF()
+                        Response.Write("<tr><td colspan='6'>There are no items for table view.</td></tr>")
+                    ELSE
+                        DO WHILE NOT EOF("curList")
+                            LOCAL lcDate
+                            lcDate = TRANSFORM(curList.createDt)
+                            IF LEN(lcDate) >= 10
+                                lcDate = LEFT(lcDate, 10)
+                            ENDIF
+                            %>
+                            <tr style="cursor: pointer;" onclick="goDetail(<%= TRANSFORM(curList.id) %>)">
+                                <td><%= TRANSFORM(curList.id) %></td>
+                                <td class="text-start article-title"><%= TRANSFORM(curList.title) %></td>
+                                
+                                <td><%= TRANSFORM(curList.views) %></td>
+                                <td><%= lcDate %></td>
+                                <td onclick="deleteItem(event, <%= TRANSFORM(curList.id) %>)">
+                                    <a href="javascript:void(0);">
+                                        <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ff0000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10 12V17" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M14 12V17" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M4 7H20" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M6 10V18C6 19.6569 7.34315 21 9 21H15C16.6569 21 18 19.6569 18 18V10" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            <%
+                            SKIP 1 IN curList
+                        ENDDO
+                    ENDIF
+                    USE IN curList
+                ENDIF
+                %>
+            </tbody>
+        </table>
+        
+        <% IF lnTotalPages > 1 %>
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center">
+                <% FOR i = 1 TO lnTotalPages %>
+                    <li class="page-item <%= IIF(i = lnPage, 'active', '') %>">
+                        <a class="page-link" href="board_list.fwx?page=<%= TRANSFORM(i) %>&keyword=<%= lcKeyword %>"><%= TRANSFORM(i) %></a>
+                    </li>
+                <% ENDFOR %>
+            </ul>
+        </nav>
+        <% ENDIF %>
+    </div>
+</div>
+
+<% SQLDISCONNECT(lnHandle) %>
+</body>
+</html>

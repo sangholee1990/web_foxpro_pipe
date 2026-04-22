@@ -1,0 +1,119 @@
+<%
+Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
+
+LOCAL lcConnStr, lnHandle, lnResult
+LOCAL lcAction, lnId, lcTitle, lcContent, lcUserId, lcSQL
+
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lnHandle = SQLSTRINGCONNECT(lcConnStr)
+
+lcAction = Request.Form("action")
+IF EMPTY(lcAction)
+    lcAction = Request.QueryString("action")
+ENDIF
+
+lnId = VAL(Request.Form("id"))
+IF lnId = 0
+    lnId = VAL(Request.QueryString("id"))
+ENDIF
+
+* 결과 메시지용 변수
+LOCAL lcIcon, lcMsg, lcUrl
+lcIcon = "success"
+lcMsg = ""
+lcUrl = "board_list.fwx"
+
+DO CASE
+    CASE lcAction = "save"
+        lcTitle = Request.Form("title")
+        lcTitle = STRTRAN(lcTitle, '"', "'")
+        lcContent = Request.Form("content")
+        
+        * 매개변수 바인딩(?)을 사용하면 SQL 인젝션 방지는 물론, 데이터 길이에 따른 오류도 방지됩니다.
+        IF lnId > 0
+            lcSQL = "UPDATE Articles SET title = ?lcTitle, content = ?lcContent, updateDt = NOW() WHERE id = ?lnId"
+            lnResult = SQLEXEC(lnHandle, lcSQL)
+            IF lnResult > 0
+                lcIcon = "success"
+                lcMsg = "수정되었습니다."
+            ELSE
+                LOCAL ARRAY laError[1]
+                AERROR(laError)
+                lcIcon = "error"
+                lcMsg = "수정 실패: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+            ENDIF
+        ELSE
+            lcSQL = "INSERT INTO Articles (title, content, views, createDt, updateDt) VALUES (?lcTitle, ?lcContent, 0, NOW(), NOW())"
+            lnResult = SQLEXEC(lnHandle, lcSQL)
+            IF lnResult > 0
+                lcIcon = "success"
+                lcMsg = "등록되었습니다."
+            ELSE
+                LOCAL ARRAY laError[1]
+                AERROR(laError)
+                lcIcon = "error"
+                lcMsg = "등록 실패: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+            ENDIF
+        ENDIF
+
+    CASE lcAction = "delete"
+        IF lnId > 0
+            lcSQL = "DELETE FROM Articles WHERE id = ?lnId"
+            lnResult = SQLEXEC(lnHandle, lcSQL)
+            IF lnResult > 0
+                lcIcon = "success"
+                lcMsg = "삭제되었습니다."
+            ELSE
+                LOCAL ARRAY laError[1]
+                AERROR(laError)
+                lcIcon = "error"
+                lcMsg = "삭제 실패: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+            ENDIF
+        ELSE
+            lcIcon = "error"
+            lcMsg = "잘못된 접근입니다."
+        ENDIF
+ENDCASE
+
+SQLDISCONNECT(lnHandle)
+%>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="euc-kr">
+    <title>Processing...</title>
+    <script src="js/sweetalert2@11.js"></script>
+</head>
+<body>
+<script>
+    var icon = '<%= lcIcon %>';
+    var msg = '<%= lcMsg %>';
+    
+    if (icon === 'success') {
+        Swal.fire({
+            position: 'top-end',
+            icon: icon,
+            title: msg,
+            showConfirmButton: false,
+            timer: 1500,
+            toast: true,
+            timerProgressBar: true
+        }).then(() => {
+            location.href = '<%= lcUrl %>';
+        });
+    } else {
+        Swal.fire({
+            icon: icon,
+            title: '작업 실패',
+            text: msg,
+            confirmButtonText: '돌아가기',
+            allowOutsideClick: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                history.back();
+            }
+        });
+    }
+</script>
+</body>
+</html>
