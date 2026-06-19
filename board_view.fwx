@@ -2,17 +2,18 @@
 Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
 
 LOCAL lcConnStr, lnHandle, lnResult, lcSQL, lnId
-LOCAL lcTitle, lcContent, lcUserId, lcCreateDt, lnViews
+LOCAL lcTitle, lcContent, lcThumbnail, lcUserId, lcCreateDt, lnViews
 
 lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
+lcRole = Request.QueryString("role")
 
 lnId = VAL(Request.QueryString("id"))
 
 IF lnId > 0
     SQLEXEC(lnHandle, "UPDATE Articles SET views = views + 1 WHERE id = ?lnId")
     lcSQL = "SELECT CAST(id AS CHAR(20)) AS id, CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, " + ;
-            "content, " + ;
+            "content, CAST(thumbnail AS CHAR(255) CHARACTER SET euckr) AS thumbnail, " + ;
             "CAST(user_id AS CHAR(20)) AS user_id, CAST(views AS CHAR(20)) AS views, " + ;
             "CAST(createDt AS CHAR(20)) AS createDt FROM Articles WHERE id = ?lnId"
             
@@ -20,16 +21,17 @@ IF lnId > 0
     IF lnResult > 0 AND NOT EOF("curArticle")
         lcTitle = curArticle.title
         lcContent = curArticle.content
+        lcThumbnail = curArticle.thumbnail
         lcUserId = curArticle.user_id
         lcCreateDt = curArticle.createDt
         lnViews = curArticle.views
         USE IN curArticle
     ELSE
-        Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'¡∏¿Á«œ¡ˆ æ ¥¬ ±€¿‘¥œ¥Ÿ.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
+        Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'Ï°¥Ïû¨ÌïòÏßÄ ÏïäÎäî Í∏ÄÏûÖÎãàÎã§.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
         RETURN
     ENDIF
 ELSE
-    Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'¿ﬂ∏¯µ» ¡¢±Ÿ¿‘¥œ¥Ÿ.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
+    Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'ÏûòÎ™ªÎêú Ï†ëÍ∑ºÏûÖÎãàÎã§.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
     RETURN
 ENDIF
 %>
@@ -51,7 +53,7 @@ ENDIF
         #detail span:not([class*='ql-font-']) { font-family: 'Pretendard GOV', sans-serif; }
         .ql-editor { font-size: 15px; white-space: normal; }
         /* Quill Font Family Mapping */
-                .ql-editor         /* ªÛºº ∫∏±‚ ∆˘∆Æ ∞≠»≠ */
+                .ql-editor         /* ÏÉÅÏÑ∏ Î≥¥Í∏∞ Ìè∞Ìä∏ Í∞ïÌôî */
                                 .ql-font-pretendard-gov { font-family: 'Pretendard GOV', sans-serif !important; }
         .ql-font-noto-sans-kr { font-family: 'Noto Sans KR', sans-serif !important; }
         .ql-font-noto-serif-kr { font-family: 'Noto Serif KR', sans-serif !important; }
@@ -77,18 +79,18 @@ ENDIF
         <script>
         function deleteArticle() {
             Swal.fire({
-                title: 'ªË¡¶ »Æ¿Œ',
-                text: '¡§∏ª∑Œ ªË¡¶«œΩ√∞⁄Ω¿¥œ±Ó?',
+                title: 'ÏÇ≠Ï†ú ÌôïÏù∏',
+                text: 'Ï†ïÎßêÎ°ú ÏÇ≠Ï†úÌïòÏãúÍ≤†ÏäµÎãàÍπå?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ªË¡¶',
-                cancelButtonText: '√Îº“',
+                confirmButtonText: 'ÏÇ≠Ï†ú',
+                cancelButtonText: 'Ï∑®ÏÜå',
                 scrollbarPadding: false
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    location.href = 'board_action.fwx?action=delete&id=<%= TRANSFORM(lnId) %>';
+                    location.href = 'board_action.fwx?action=delete&id=<%= TRANSFORM(lnId) %>&role=<%= lcRole %>';
                 }
             });
         }
@@ -101,9 +103,11 @@ ENDIF
         <div class="card-header d-flex justify-content-between align-items-center">
         <div class="fw-bold my-auto">ARTICLE DETAIL</div>
         <div class="d-flex gap-1">
-            <button type="button" class="btn btn-sm btn-secondary btn-board" onclick="location.href='board_list.fwx'">LIST</button>
-            <button type="button" class="btn btn-sm btn-primary btn-board" onclick="location.href='board_write.fwx?id=<%= TRANSFORM(lnId) %>'">EDIT</button>
+            <button type="button" class="btn btn-sm btn-secondary btn-board" onclick="location.href='board_list.fwx?role=<%= lcRole %>'">LIST</button>
+            <% IF LOWER(lcRole) = "admin" %>
+            <button type="button" class="btn btn-sm btn-primary btn-board" onclick="location.href='board_write.fwx?id=<%= TRANSFORM(lnId) %>&role=<%= lcRole %>'">EDIT</button>
             <button type="button" class="btn btn-sm btn-danger btn-board" onclick="deleteArticle()">DELETE</button>
+            <% ENDIF %>
         </div>
     </div>
     <div class="card-body">
@@ -117,6 +121,12 @@ ENDIF
                 </div>
             </div>
 
+            <% IF NOT EMPTY(lcThumbnail) %>
+            <div class="mb-4 text-center">
+                <img src="<%= TRANSFORM(lcThumbnail) %>" alt="Thumbnail" class="img-fluid rounded" style="max-height: 400px;">
+            </div>
+            <% ENDIF %>
+
             <div class="content-body ql-snow ql-container" style="min-height: 300px;">
                 <div class="ql-editor p-0">
                     <%= lcContent %>
@@ -126,9 +136,11 @@ ENDIF
 
         <div class="row px-2 text-center mt-3">
             <div class="col-12 mt-2">
-                <button type="button" class="btn btn-sm btn-secondary btn-board" onclick="location.href='board_list.fwx'">LIST</button>
-                <button type="button" class="btn btn-sm btn-primary btn-board" onclick="location.href='board_write.fwx?id=<%= TRANSFORM(lnId) %>'">EDIT</button>
+                <button type="button" class="btn btn-sm btn-secondary btn-board" onclick="location.href='board_list.fwx?role=<%= lcRole %>'">LIST</button>
+                <% IF LOWER(lcRole) = "admin" %>
+                <button type="button" class="btn btn-sm btn-primary btn-board" onclick="location.href='board_write.fwx?id=<%= TRANSFORM(lnId) %>&role=<%= lcRole %>'">EDIT</button>
                 <button type="button" class="btn btn-sm btn-danger btn-board" onclick="deleteArticle()">DELETE</button>
+                <% ENDIF %>
             </div>
         </div>
     </div>

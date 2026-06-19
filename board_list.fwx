@@ -10,7 +10,7 @@ SQLSETPROP(0, "DispLogin", 3)
 lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
-* ø°∑Ø πﬂª˝ Ω√ ±∏√º¿˚¿Œ ø¯¿Œ¿ª »≠∏Èø° √‚∑¬«œµµ∑œ ∫∏∞≠
+* ÏóêÎü¨ Î∞úÏÉù Ïãú Íµ¨Ï≤¥Ï†ÅÏù∏ ÏõêÏù∏ÏùÑ ÌôîÎ©¥Ïóê Ï∂úÎ†•ÌïòÎèÑÎ°ù Î≥¥Í∞ï
 IF lnHandle < 0
     AERROR(laError)
     Response.Write("<h3>DB Connection Error</h3>")
@@ -19,6 +19,7 @@ IF lnHandle < 0
 ENDIF
 
 lcKeyword = Request.QueryString("keyword")
+lcRole = Request.QueryString("role")
 
 lnPage = VAL(Request.QueryString("page"))
 IF lnPage < 1
@@ -45,6 +46,7 @@ lnTotalPages = CEILING(lnTotal / lnLimit)
 
 lcSQL = "SELECT CAST(id AS CHAR(20)) AS id, " + ;
         "CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, " + ;
+        "CAST(thumbnail AS CHAR(255) CHARACTER SET euckr) AS thumbnail, " + ;
         "CAST(user_id AS CHAR(20)) AS user_id, " + ;
         "CAST(views AS CHAR(20)) AS views, " + ;
         "CAST(createDt AS CHAR(20)) AS createDt " + ;
@@ -64,23 +66,23 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
     <link href="css/bootstrap.min.css" rel="stylesheet">
         <script>
         function goDetail(id) {
-            location.href = "board_view.fwx?id=" + id;
+            location.href = "board_view.fwx?id=" + id + "&role=<%= lcRole %>";
         }
         function deleteItem(event, id) {
             event.stopPropagation();
             Swal.fire({
-                title: 'ªË¡¶ »Æ¿Œ',
-                text: '¡§∏ª∑Œ ªË¡¶«œΩ√∞⁄Ω¿¥œ±Ó?',
+                title: 'ÏÇ≠Ï†ú ÌôïÏù∏',
+                text: 'Ï†ïÎßêÎ°ú ÏÇ≠Ï†úÌïòÏãúÍ≤†ÏäµÎãàÍπå?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ªË¡¶',
-                cancelButtonText: '√Îº“',
+                confirmButtonText: 'ÏÇ≠Ï†ú',
+                cancelButtonText: 'Ï∑®ÏÜå',
                 scrollbarPadding: false
             }).then(function(result) {
                 if (result.isConfirmed) {
-                    location.href = 'board_action.fwx?action=delete&id=' + id;
+                    location.href = 'board_action.fwx?action=delete&id=' + id + '&role=<%= lcRole %>';
                 }
             });
         }
@@ -102,15 +104,18 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
         <div class="d-flex bd-highlight">
             <div class="me-auto fw-bold my-auto">ARTICLE LISTS</div>
             <div>
-                <a href="board_write.fwx" class='btn btn-sm btn-dark btn-board'>ADD</a>
+                <% IF LOWER(lcRole) = "admin" %>
+                <a href="board_write.fwx?role=<%= lcRole %>" class='btn btn-sm btn-dark btn-board'>ADD</a>
+                <% ENDIF %>
             </div>
         </div>
     </div>
     <div class="card-body">
         <div class='d-flex align-items-center py-2 mb-2'>
-            <span class='small text-muted text-nowrap me-2'>√— <strong class='text-dark'><%= TRANSFORM(lnTotal) %>∞«</strong></span>
+            <span class='small text-muted text-nowrap me-2'>Ï¥ù <strong class='text-dark'><%= TRANSFORM(lnTotal) %>Í±¥</strong></span>
             <div class='input-group input-group-sm'>
                 <form action="board_list.fwx" method="GET" class="d-flex w-100 m-0 p-0">
+                    <input type="hidden" name="role" value="<%= lcRole %>">
                     <input type="text" name="keyword" class='form-control' placeholder='Title, Content ...' value="<%= lcKeyword %>">
                     <button type="submit" class='btn btn-sm btn-primary btn-board'>SEARCH</button>
                 </form>
@@ -125,7 +130,9 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                     
                     <th width="80">Views</th>
                     <th width="120">Date</th>
+                    <% IF LOWER(lcRole) = "admin" %>
                     <th width="80">Delete</th>
+                    <% ENDIF %>
                 </tr>
             </thead>
             <tbody>
@@ -133,7 +140,7 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                 IF lnResult < 0
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
-                Response.Write("<tr><td colspan='6' class='text-danger'>DB ø¿∑˘: " + TRANSFORM(laError[2]) + "</td></tr>")
+                Response.Write("<tr><td colspan='6' class='text-danger'>DB Ïò§Î•ò: " + TRANSFORM(laError[2]) + "</td></tr>")
             ELSE
                     SELECT curList
                     IF EOF()
@@ -152,11 +159,13 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                                 
                                 <td><%= TRANSFORM(curList.views) %></td>
                                 <td><%= lcDate %></td>
+                                <% IF LOWER(lcRole) = "admin" %>
                                 <td onclick="deleteItem(event, <%= TRANSFORM(curList.id) %>)">
                                     <a href="javascript:void(0);">
                                         <svg width="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ff0000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10 12V17" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M14 12V17" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M4 7H20" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M6 10V18C6 19.6569 7.34315 21 9 21H15C16.6569 21 18 19.6569 18 18V10" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
                                     </a>
                                 </td>
+                                <% ENDIF %>
                             </tr>
                             <%
                             SKIP 1 IN curList
@@ -173,7 +182,7 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
             <ul class="pagination pagination-sm justify-content-center">
                 <% FOR i = 1 TO lnTotalPages %>
                     <li class="page-item <%= IIF(i = lnPage, 'active', '') %>">
-                        <a class="page-link" href="board_list.fwx?page=<%= TRANSFORM(i) %>&keyword=<%= lcKeyword %>"><%= TRANSFORM(i) %></a>
+                        <a class="page-link" href="board_list.fwx?page=<%= TRANSFORM(i) %>&keyword=<%= lcKeyword %>&role=<%= lcRole %>"><%= TRANSFORM(i) %></a>
                     </li>
                 <% ENDFOR %>
             </ul>

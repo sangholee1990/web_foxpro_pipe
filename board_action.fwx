@@ -17,42 +17,54 @@ IF lnId = 0
     lnId = VAL(Request.QueryString("id"))
 ENDIF
 
-* °á°ú ¸Þ½ÃÁö¿ë º¯¼ö
+LOCAL lcRole
+lcRole = Request.Form("role")
+IF EMPTY(lcRole)
+    lcRole = Request.QueryString("role")
+ENDIF
+IF LOWER(lcRole) <> "admin"
+    Response.Write("<html><head><script src='js/sweetalert2@11.js'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'Permission denied.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx?role="+lcRole+"';});</script></body></html>")
+    RETURN
+ENDIF
+
+* ê²°ê³¼ ë©”ì‹œì§€ìš© ë³€ìˆ˜
 LOCAL lcIcon, lcMsg, lcUrl
 lcIcon = "success"
 lcMsg = ""
-lcUrl = "board_list.fwx"
+lcUrl = "board_list.fwx?role=" + lcRole
 
 DO CASE
     CASE lcAction = "save"
         lcTitle = Request.Form("title")
         lcTitle = STRTRAN(lcTitle, '"', "'")
+        lcThumbnail = Request.Form("thumbnail")
+        lcThumbnail = STRTRAN(lcThumbnail, '"', "'")
         lcContent = Request.Form("content")
         
-        * ¸Å°³º¯¼ö ¹ÙÀÎµù(?)À» »ç¿ëÇÏ¸é SQL ÀÎÁ§¼Ç ¹æÁö´Â ¹°·Ð, µ¥ÀÌÅÍ ±æÀÌ¿¡ µû¸¥ ¿À·ùµµ ¹æÁöµË´Ï´Ù.
+        * ë§¤ê°œë³€ìˆ˜ ë°”ì¸ë”©(?)ì„ ì‚¬ìš©í•˜ë©´ SQL ì¸ì ì…˜ ë°©ì§€ëŠ” ë¬¼ë¡ , ë°ì´í„° ê¸¸ì´ì— ë”°ë¥¸ ì˜¤ë¥˜ë„ ë°©ì§€ë©ë‹ˆë‹¤.
         IF lnId > 0
-            lcSQL = "UPDATE Articles SET title = ?lcTitle, content = ?lcContent, updateDt = NOW() WHERE id = ?lnId"
+            lcSQL = "UPDATE Articles SET title = ?lcTitle, thumbnail = ?lcThumbnail, content = ?lcContent, updateDt = NOW() WHERE id = ?lnId"
             lnResult = SQLEXEC(lnHandle, lcSQL)
             IF lnResult > 0
                 lcIcon = "success"
-                lcMsg = "¼öÁ¤µÇ¾ú½À´Ï´Ù."
+                lcMsg = "ìˆ˜ì •ë˜ì—ˆìŠµë‹ˆë‹¤."
             ELSE
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
                 lcIcon = "error"
-                lcMsg = "¼öÁ¤ ½ÇÆÐ: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+                lcMsg = "ìˆ˜ì • ì‹¤íŒ¨: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
             ENDIF
         ELSE
-            lcSQL = "INSERT INTO Articles (title, content, views, createDt, updateDt) VALUES (?lcTitle, ?lcContent, 0, NOW(), NOW())"
+            lcSQL = "INSERT INTO Articles (title, thumbnail, content, views, createDt, updateDt) VALUES (?lcTitle, ?lcThumbnail, ?lcContent, 0, NOW(), NOW())"
             lnResult = SQLEXEC(lnHandle, lcSQL)
             IF lnResult > 0
                 lcIcon = "success"
-                lcMsg = "µî·ÏµÇ¾ú½À´Ï´Ù."
+                lcMsg = "ë“±ë¡ë˜ì—ˆìŠµë‹ˆë‹¤."
             ELSE
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
                 lcIcon = "error"
-                lcMsg = "µî·Ï ½ÇÆÐ: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+                lcMsg = "ë“±ë¡ ì‹¤íŒ¨: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
             ENDIF
         ENDIF
 
@@ -62,16 +74,16 @@ DO CASE
             lnResult = SQLEXEC(lnHandle, lcSQL)
             IF lnResult > 0
                 lcIcon = "success"
-                lcMsg = "»èÁ¦µÇ¾ú½À´Ï´Ù."
+                lcMsg = "ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤."
             ELSE
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
                 lcIcon = "error"
-                lcMsg = "»èÁ¦ ½ÇÆÐ: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+                lcMsg = "ì‚­ì œ ì‹¤íŒ¨: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
             ENDIF
         ELSE
             lcIcon = "error"
-            lcMsg = "Àß¸øµÈ Á¢±ÙÀÔ´Ï´Ù."
+            lcMsg = "ìž˜ëª»ëœ ì ‘ê·¼ìž…ë‹ˆë‹¤."
         ENDIF
 ENDCASE
 
@@ -104,9 +116,9 @@ SQLDISCONNECT(lnHandle)
     } else {
         Swal.fire({
             icon: icon,
-            title: 'ÀÛ¾÷ ½ÇÆÐ',
+            title: 'ìž‘ì—… ì‹¤íŒ¨',
             text: msg,
-            confirmButtonText: 'µ¹¾Æ°¡±â',
+            confirmButtonText: 'ëŒì•„ê°€ê¸°',
             allowOutsideClick: false
         }).then((result) => {
             if (result.isConfirmed) {

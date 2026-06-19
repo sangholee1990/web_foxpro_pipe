@@ -1,11 +1,18 @@
 <%
 Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
 
-LOCAL lcConnStr, lnHandle, lnResult, lnId
-LOCAL lcTitle, lcContent
+LOCAL lcConnStr, lnHandle, lnResult, lnId, lcRole
+LOCAL lcTitle, lcContent, lcThumbnail
+
+lcRole = Request.QueryString("role")
+IF LOWER(lcRole) <> "admin"
+    Response.Write("<html><head><script src='js/sweetalert2@11.js'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'Permission denied.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx?role="+lcRole+"';});</script></body></html>")
+    RETURN
+ENDIF
 
 lcTitle = ""
 lcContent = ""
+lcThumbnail = ""
 
 lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
@@ -13,10 +20,11 @@ lnHandle = SQLSTRINGCONNECT(lcConnStr)
 lnId = VAL(Request.QueryString("id"))
 
 IF lnId > 0
-    lnResult = SQLEXEC(lnHandle, "SELECT CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, content FROM Articles WHERE id = ?lnId", "curArticle")
+    lnResult = SQLEXEC(lnHandle, "SELECT CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, content, CAST(thumbnail AS CHAR(255) CHARACTER SET euckr) AS thumbnail FROM Articles WHERE id = ?lnId", "curArticle")
     IF lnResult > 0 AND NOT EOF("curArticle")
         lcTitle = curArticle.title
         lcContent = curArticle.content
+        lcThumbnail = curArticle.thumbnail
         USE IN curArticle
     ENDIF
 ENDIF
@@ -113,11 +121,12 @@ ENDIF
         <div class="fw-bold my-auto"><%= IIF(lnId > 0, 'EDIT ARTICLE', 'WRITE ARTICLE') %></div>
                 <div class="d-flex gap-1">
             <button type="button" class="btn btn-sm btn-primary btn-board fw-bold" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
-            <a href="board_list.fwx" class='btn btn-sm btn-secondary btn-board fw-bold'>LIST</a>
+            <a href="board_list.fwx?role=<%= lcRole %>" class='btn btn-sm btn-secondary btn-board fw-bold'>LIST</a>
         </div>
     </div>
     <div class="card-body mb-5">
         <form action="board_action.fwx" method="POST" id="writeForm" onsubmit="return validateForm()">
+            <input type="hidden" name="role" value="<%= lcRole %>">
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="id" value="<%= TRANSFORM(lnId) %>">
             <input type="hidden" name="content" id="content_hidden">
@@ -126,6 +135,13 @@ ENDIF
                 <div class="col-md-12 px-1">
                     <label class="small fw-bold" for="title">Title</label>
                     <input type="text" class="form-control" name="title" id="title" value="<%= TRANSFORM(lcTitle) %>" required>
+                </div>
+            </div>
+
+            <div class="row px-2 mb-3">
+                <div class="col-md-12 px-1">
+                    <label class="small fw-bold" for="thumbnail">Thumbnail Image URL (Optional)</label>
+                    <input type="text" class="form-control" name="thumbnail" id="thumbnail" value="<%= TRANSFORM(lcThumbnail) %>" placeholder="https://example.com/image.jpg">
                 </div>
             </div>
 
@@ -140,7 +156,7 @@ ENDIF
         </div>
         <div class="text-center pt-0 pb-3">
             <button type="button" class="btn btn-sm btn-primary btn-board fw-bold mx-1" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
-            <a href="board_list.fwx" class="btn btn-sm btn-secondary btn-board fw-bold mx-1">LIST</a>
+            <a href="board_list.fwx?role=<%= lcRole %>" class="btn btn-sm btn-secondary btn-board fw-bold mx-1">LIST</a>
         </div>
     </div>
 
@@ -178,7 +194,7 @@ ENDIF
             }
         });
 
-      // ±‚¡∏ ≥ªøÎ ∑ŒµÂ
+      // Í∏∞Ï°¥ ÎÇ¥Ïö© Î°úÎìú
       var rawContent = document.getElementById('raw_content').value;
       if (rawContent.trim().length > 0) {
           window.quill.root.innerHTML = rawContent;
@@ -188,14 +204,14 @@ ENDIF
     function validateForm() {
         var title = document.getElementById('title').value.trim();
         if(title.length < 2 || title.length > 255) {
-            Swal.fire({ position: 'top-end', icon: 'warning', title: '¡¶∏Ò¿∫ 2¿⁄ ¿ÃªÛ 255¿⁄ ¿Ã≥ª∑Œ ¿‘∑¬«ÿ¡÷ººø‰.', showConfirmButton: false, timer: 2000, toast: true });
+            Swal.fire({ position: 'top-end', icon: 'warning', title: 'Ï†úÎ™©ÏùÄ 2Ïûê Ïù¥ÏÉÅ 255Ïûê Ïù¥ÎÇ¥Î°ú ÏûÖÎ†•Ìï¥Ï£ºÏÑ∏Ïöî.', showConfirmButton: false, timer: 2000, toast: true });
             return false;
         }
         
         var content = window.quill.root.innerHTML;
         var stripped = window.quill.getText().trim();
         if(stripped.length === 0) {
-            Swal.fire({ position: 'top-end', icon: 'warning', title: '≥ªøÎ¿ª ¿‘∑¬«ÿ¡÷ººø‰.', showConfirmButton: false, timer: 2000, toast: true });
+            Swal.fire({ position: 'top-end', icon: 'warning', title: 'ÎÇ¥Ïö©ÏùÑ ÏûÖÎ†•Ìï¥Ï£ºÏÑ∏Ïöî.', showConfirmButton: false, timer: 2000, toast: true });
             return false;
         }
 
