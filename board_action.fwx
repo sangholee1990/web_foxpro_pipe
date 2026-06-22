@@ -4,7 +4,7 @@ Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
 LOCAL lcConnStr, lnHandle, lnResult
 LOCAL lcAction, lnId, lcTitle, lcContent, lcUserId, lcSQL
 
-lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
 lcAction = Request.Form("action")
@@ -27,7 +27,7 @@ IF LOWER(lcRole) <> "admin"
     RETURN
 ENDIF
 
-* Í≤∞Í≥º Î©îÏãúÏßÄÏö© Î≥ÄÏàò
+* ∞·∞˙ ∏ﬁΩ√¡ˆøÎ ∫Øºˆ
 LOCAL lcIcon, lcMsg, lcUrl
 lcIcon = "success"
 lcMsg = ""
@@ -39,32 +39,43 @@ DO CASE
         lcTitle = STRTRAN(lcTitle, '"', "'")
         lcThumbnail = Request.Form("thumbnail")
         lcThumbnail = STRTRAN(lcThumbnail, '"', "'")
+        
+        LOCAL lcThumbnailBase64, lcBase64Data, lcFileName, lcBinary
+        lcThumbnailBase64 = Request.Form("thumbnail_base64")
+        IF NOT EMPTY(lcThumbnailBase64) AND AT("base64,", lcThumbnailBase64) > 0
+            lcBase64Data = SUBSTR(lcThumbnailBase64, AT("base64,", lcThumbnailBase64) + 7)
+            lcBinary = STRCONV(lcBase64Data, 14)
+            lcFileName = "uploads/" + SYS(2015) + ".png"
+            STRTOFILE(lcBinary, lcFileName)
+            lcThumbnail = lcFileName
+        ENDIF
+
         lcContent = Request.Form("content")
         
-        * Îß§Í∞úÎ≥ÄÏàò Î∞îÏù∏Îî©(?)ÏùÑ ÏÇ¨Ïö©ÌïòÎ©¥ SQL Ïù∏Ï†ùÏÖò Î∞©ÏßÄÎäî Î¨ºÎ°†, Îç∞Ïù¥ÌÑ∞ Í∏∏Ïù¥Ïóê Îî∞Î•∏ Ïò§Î•òÎèÑ Î∞©ÏßÄÎê©ÎãàÎã§.
+        * ∏≈∞≥∫Øºˆ πŸ¿Œµ˘(?)¿ª ªÁøÎ«œ∏È SQL ¿Œ¡ßº« πÊ¡ˆ¥¬ π∞∑–, µ•¿Ã≈Õ ±Ê¿Ãø° µ˚∏• ø¿∑˘µµ πÊ¡ˆµÀ¥œ¥Ÿ.
         IF lnId > 0
             lcSQL = "UPDATE Articles SET title = ?lcTitle, thumbnail = ?lcThumbnail, content = ?lcContent, updateDt = NOW() WHERE id = ?lnId"
             lnResult = SQLEXEC(lnHandle, lcSQL)
             IF lnResult > 0
                 lcIcon = "success"
-                lcMsg = "ÏàòÏ†ïÎêòÏóàÏäµÎãàÎã§."
+                lcMsg = "ºˆ¡§µ«æ˙Ω¿¥œ¥Ÿ."
             ELSE
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
                 lcIcon = "error"
-                lcMsg = "ÏàòÏ†ï Ïã§Ìå®: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+                lcMsg = "ºˆ¡§ Ω«∆–: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
             ENDIF
         ELSE
             lcSQL = "INSERT INTO Articles (title, thumbnail, content, views, createDt, updateDt) VALUES (?lcTitle, ?lcThumbnail, ?lcContent, 0, NOW(), NOW())"
             lnResult = SQLEXEC(lnHandle, lcSQL)
             IF lnResult > 0
                 lcIcon = "success"
-                lcMsg = "Îì±Î°ùÎêòÏóàÏäµÎãàÎã§."
+                lcMsg = "µÓ∑œµ«æ˙Ω¿¥œ¥Ÿ."
             ELSE
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
                 lcIcon = "error"
-                lcMsg = "Îì±Î°ù Ïã§Ìå®: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+                lcMsg = "µÓ∑œ Ω«∆–: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
             ENDIF
         ENDIF
 
@@ -74,16 +85,16 @@ DO CASE
             lnResult = SQLEXEC(lnHandle, lcSQL)
             IF lnResult > 0
                 lcIcon = "success"
-                lcMsg = "ÏÇ≠Ï†úÎêòÏóàÏäµÎãàÎã§."
+                lcMsg = "ªË¡¶µ«æ˙Ω¿¥œ¥Ÿ."
             ELSE
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
                 lcIcon = "error"
-                lcMsg = "ÏÇ≠Ï†ú Ïã§Ìå®: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
+                lcMsg = "ªË¡¶ Ω«∆–: " + STRTRAN(TRANSFORM(laError[2]), "'", "")
             ENDIF
         ELSE
             lcIcon = "error"
-            lcMsg = "ÏûòÎ™ªÎêú Ï†ëÍ∑ºÏûÖÎãàÎã§."
+            lcMsg = "¿ﬂ∏¯µ» ¡¢±Ÿ¿‘¥œ¥Ÿ."
         ENDIF
 ENDCASE
 
@@ -92,7 +103,7 @@ SQLDISCONNECT(lnHandle)
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="euc-kr">
+    <meta charset="utf-8">
     <title>Processing...</title>
     <script src="js/sweetalert2@11.js"></script>
 </head>
@@ -116,9 +127,9 @@ SQLDISCONNECT(lnHandle)
     } else {
         Swal.fire({
             icon: icon,
-            title: 'ÏûëÏóÖ Ïã§Ìå®',
+            title: '¿€æ˜ Ω«∆–',
             text: msg,
-            confirmButtonText: 'ÎèåÏïÑÍ∞ÄÍ∏∞',
+            confirmButtonText: 'µπæ∆∞°±‚',
             allowOutsideClick: false
         }).then((result) => {
             if (result.isConfirmed) {

@@ -14,7 +14,7 @@ lcTitle = ""
 lcContent = ""
 lcThumbnail = ""
 
-lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
 lnId = VAL(Request.QueryString("id"))
@@ -32,7 +32,7 @@ ENDIF
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="euc-kr">
+    <meta charset="utf-8">
     <title><%= IIF(lnId > 0, 'EDIT ARTICLE', 'WRITE ARTICLE') %></title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/quill.snow.css" />
@@ -138,19 +138,30 @@ ENDIF
                 </div>
             </div>
 
-            <div class="row px-2 mb-3">
-                <div class="col-md-12 px-1">
-                    <label class="small fw-bold" for="thumbnail">Thumbnail Image URL (Optional)</label>
-                    <input type="text" class="form-control" name="thumbnail" id="thumbnail" value="<%= TRANSFORM(lcThumbnail) %>" placeholder="https://example.com/image.jpg">
-                </div>
-            </div>
-
             <div class="row px-2 mb-4">
                 <div class="col-md-12 px-1">
                     <label class="small fw-bold" for="content">Content</label>
                     <div id="quilleditor"></div><textarea id="raw_content" style="display:none;"><%= lcContent %></textarea>
                 </div>
+            </div>
+            
+            <div class="row px-2 mb-3">
+                <div class="col-md-12 px-1">
+                    <label class="small fw-bold" for="thumbnail">Thumbnail Image (Optional)</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="file" class="form-control" id="thumbnail_file" accept="image/*" onchange="previewThumbnail(this)">
+                            <input type="hidden" name="thumbnail" id="thumbnail" value="<%= TRANSFORM(lcThumbnail) %>">
+                            <input type="hidden" name="thumbnail_base64" id="thumbnail_base64" value="">
+                        </div>
+                        <div class="col-md-6">
+                            <div id="thumbnail_preview_container" style="display: <%= IIF(EMPTY(lcThumbnail), 'none', 'flex') %>; justify-content: center; align-items: center; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; min-height: 150px; background-color: #f8f9fa;">
+                                <img id="thumbnail_preview" src="<%= TRANSFORM(lcThumbnail) %>" style="max-height: 140px; border-radius:4px; object-fit:contain; max-width: 100%;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
     
             </form>
         </div>
@@ -194,7 +205,7 @@ ENDIF
             }
         });
 
-      // Í∏∞Ï°¥ ÎÇ¥Ïö© Î°úÎìú
+      // ±‚¡∏ ≥ªøÎ ∑ŒµÂ
       var rawContent = document.getElementById('raw_content').value;
       if (rawContent.trim().length > 0) {
           window.quill.root.innerHTML = rawContent;
@@ -204,19 +215,35 @@ ENDIF
     function validateForm() {
         var title = document.getElementById('title').value.trim();
         if(title.length < 2 || title.length > 255) {
-            Swal.fire({ position: 'top-end', icon: 'warning', title: 'Ï†úÎ™©ÏùÄ 2Ïûê Ïù¥ÏÉÅ 255Ïûê Ïù¥ÎÇ¥Î°ú ÏûÖÎ†•Ìï¥Ï£ºÏÑ∏Ïöî.', showConfirmButton: false, timer: 2000, toast: true });
+            Swal.fire({ position: 'top-end', icon: 'warning', title: '¡¶∏Ò¿∫ 2¿⁄ ¿ÃªÛ 255¿⁄ ¿Ã≥ª∑Œ ¿‘∑¬«ÿ¡÷ººø‰.', showConfirmButton: false, timer: 2000, toast: true });
             return false;
         }
         
         var content = window.quill.root.innerHTML;
         var stripped = window.quill.getText().trim();
         if(stripped.length === 0) {
-            Swal.fire({ position: 'top-end', icon: 'warning', title: 'ÎÇ¥Ïö©ÏùÑ ÏûÖÎ†•Ìï¥Ï£ºÏÑ∏Ïöî.', showConfirmButton: false, timer: 2000, toast: true });
+            Swal.fire({ position: 'top-end', icon: 'warning', title: '≥ªøÎ¿ª ¿‘∑¬«ÿ¡÷ººø‰.', showConfirmButton: false, timer: 2000, toast: true });
             return false;
         }
 
         document.getElementById('content_hidden').value = content;
         return true;
+    }
+
+    function previewThumbnail(input) {
+        var previewContainer = document.getElementById('thumbnail_preview_container');
+        var preview = document.getElementById('thumbnail_preview');
+        var base64Input = document.getElementById('thumbnail_base64');
+        
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                base64Input.value = e.target.result;
+                previewContainer.style.display = 'flex';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 </script>
 <% SQLDISCONNECT(lnHandle) %>

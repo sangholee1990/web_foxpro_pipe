@@ -4,7 +4,7 @@ Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
 LOCAL lcConnStr, lnHandle, lnResult, lcSQL, lnId
 LOCAL lcTitle, lcContent, lcThumbnail, lcUserId, lcCreateDt, lnViews
 
-lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 lcRole = Request.QueryString("role")
 
@@ -27,18 +27,18 @@ IF lnId > 0
         lnViews = curArticle.views
         USE IN curArticle
     ELSE
-        Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'Ï°¥Ïû¨ÌïòÏßÄ ÏïäÎäî Í∏ÄÏûÖÎãàÎã§.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
+        Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'¡∏¿Á«œ¡ˆ æ ¥¬ ±€¿‘¥œ¥Ÿ.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
         RETURN
     ENDIF
 ELSE
-    Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'ÏûòÎ™ªÎêú Ï†ëÍ∑ºÏûÖÎãàÎã§.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
+    Response.Write("<html><head><script src='js/sweetalert2@11'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'¿ﬂ∏¯µ» ¡¢±Ÿ¿‘¥œ¥Ÿ.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx';});</script></body></html>")
     RETURN
 ENDIF
 %>
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="euc-kr">
+    <meta charset="utf-8">
     <title>ARTICLE DETAIL</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/quill.snow.css" rel="stylesheet">
@@ -53,7 +53,7 @@ ENDIF
         #detail span:not([class*='ql-font-']) { font-family: 'Pretendard GOV', sans-serif; }
         .ql-editor { font-size: 15px; white-space: normal; }
         /* Quill Font Family Mapping */
-                .ql-editor         /* ÏÉÅÏÑ∏ Î≥¥Í∏∞ Ìè∞Ìä∏ Í∞ïÌôî */
+                .ql-editor         /* ªÛºº ∫∏±‚ ∆˘∆Æ ∞≠»≠ */
                                 .ql-font-pretendard-gov { font-family: 'Pretendard GOV', sans-serif !important; }
         .ql-font-noto-sans-kr { font-family: 'Noto Sans KR', sans-serif !important; }
         .ql-font-noto-serif-kr { font-family: 'Noto Serif KR', sans-serif !important; }
@@ -79,14 +79,14 @@ ENDIF
         <script>
         function deleteArticle() {
             Swal.fire({
-                title: 'ÏÇ≠Ï†ú ÌôïÏù∏',
-                text: 'Ï†ïÎßêÎ°ú ÏÇ≠Ï†úÌïòÏãúÍ≤†ÏäµÎãàÍπå?',
+                title: 'ªË¡¶ »Æ¿Œ',
+                text: '¡§∏ª∑Œ ªË¡¶«œΩ√∞⁄Ω¿¥œ±Ó?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ÏÇ≠Ï†ú',
-                cancelButtonText: 'Ï∑®ÏÜå',
+                confirmButtonText: 'ªË¡¶',
+                cancelButtonText: '√Îº“',
                 scrollbarPadding: false
             }).then(function(result) {
                 if (result.isConfirmed) {

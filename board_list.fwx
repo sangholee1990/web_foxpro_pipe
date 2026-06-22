@@ -7,10 +7,10 @@ LOCAL ARRAY laError[1]
 
 SQLSETPROP(0, "DispLogin", 3)
 
-lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
-* ÏóêÎü¨ Î∞úÏÉù Ïãú Íµ¨Ï≤¥Ï†ÅÏù∏ ÏõêÏù∏ÏùÑ ÌôîÎ©¥Ïóê Ï∂úÎ†•ÌïòÎèÑÎ°ù Î≥¥Í∞ï
+* ø°∑Ø πﬂª˝ Ω√ ±∏√º¿˚¿Œ ø¯¿Œ¿ª »≠∏Èø° √‚∑¬«œµµ∑œ ∫∏∞≠
 IF lnHandle < 0
     AERROR(laError)
     Response.Write("<h3>DB Connection Error</h3>")
@@ -61,7 +61,7 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="euc-kr">
+    <meta charset="utf-8">
     <title>ARTICLE LISTS</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
         <script>
@@ -71,14 +71,14 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
         function deleteItem(event, id) {
             event.stopPropagation();
             Swal.fire({
-                title: 'ÏÇ≠Ï†ú ÌôïÏù∏',
-                text: 'Ï†ïÎßêÎ°ú ÏÇ≠Ï†úÌïòÏãúÍ≤†ÏäµÎãàÍπå?',
+                title: 'ªË¡¶ »Æ¿Œ',
+                text: '¡§∏ª∑Œ ªË¡¶«œΩ√∞⁄Ω¿¥œ±Ó?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ÏÇ≠Ï†ú',
-                cancelButtonText: 'Ï∑®ÏÜå',
+                confirmButtonText: 'ªË¡¶',
+                cancelButtonText: '√Îº“',
                 scrollbarPadding: false
             }).then(function(result) {
                 if (result.isConfirmed) {
@@ -112,7 +112,7 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
     </div>
     <div class="card-body">
         <div class='d-flex align-items-center py-2 mb-2'>
-            <span class='small text-muted text-nowrap me-2'>Ï¥ù <strong class='text-dark'><%= TRANSFORM(lnTotal) %>Í±¥</strong></span>
+            <span class='small text-muted text-nowrap me-2'>√— <strong class='text-dark'><%= TRANSFORM(lnTotal) %>∞«</strong></span>
             <div class='input-group input-group-sm'>
                 <form action="board_list.fwx" method="GET" class="d-flex w-100 m-0 p-0">
                     <input type="hidden" name="role" value="<%= lcRole %>">
@@ -126,6 +126,7 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
             <thead>
                 <tr>
                     <th width="80">No</th>
+                    <th width="100">Thumb</th>
                     <th>Title</th>
                     
                     <th width="80">Views</th>
@@ -140,7 +141,7 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                 IF lnResult < 0
                 LOCAL ARRAY laError[1]
                 AERROR(laError)
-                Response.Write("<tr><td colspan='6' class='text-danger'>DB Ïò§Î•ò: " + TRANSFORM(laError[2]) + "</td></tr>")
+                Response.Write("<tr><td colspan='6' class='text-danger'>DB ø¿∑˘: " + TRANSFORM(laError[2]) + "</td></tr>")
             ELSE
                     SELECT curList
                     IF EOF()
@@ -154,11 +155,18 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                             ENDIF
                             %>
                             <tr style="cursor: pointer;" onclick="goDetail(<%= TRANSFORM(curList.id) %>)">
-                                <td><%= TRANSFORM(curList.id) %></td>
-                                <td class="text-start article-title"><%= TRANSFORM(curList.title) %></td>
+                                <td class="align-middle"><%= TRANSFORM(curList.id) %></td>
+                                <td class="align-middle p-1">
+                                    <% IF NOT EMPTY(curList.thumbnail) %>
+                                        <img src="<%= TRANSFORM(curList.thumbnail) %>" style="width:100%; height:60px; object-fit:cover; border-radius:4px;">
+                                    <% ELSE %>
+                                        <div style="width:100%; height:60px; background:#f0f0f0; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:12px;">No Img</div>
+                                    <% ENDIF %>
+                                </td>
+                                <td class="text-start article-title align-middle"><%= TRANSFORM(curList.title) %></td>
                                 
-                                <td><%= TRANSFORM(curList.views) %></td>
-                                <td><%= lcDate %></td>
+                                <td class="align-middle"><%= TRANSFORM(curList.views) %></td>
+                                <td class="align-middle"><%= lcDate %></td>
                                 <% IF LOWER(lcRole) = "admin" %>
                                 <td onclick="deleteItem(event, <%= TRANSFORM(curList.id) %>)">
                                     <a href="javascript:void(0);">
