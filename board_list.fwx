@@ -10,7 +10,7 @@ SQLSETPROP(0, "DispLogin", 3)
 lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
-* 에러 발생 시 구체적인 원인을 화면에 출력하도록 보강
+* 에러 발생 시 구체적인 에러가 화면에 출력되도록 설정
 IF lnHandle < 0
     AERROR(laError)
     Response.Write("<h3>DB Connection Error</h3>")
@@ -61,10 +61,10 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta charset="euc-kr">
     <title>ARTICLE LISTS</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
-        <script>
+    <script>
         function goDetail(id) {
             location.href = "board_view.fwx?id=" + id + "&role=<%= lcRole %>";
         }
@@ -92,8 +92,8 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
         body, input, button, select, textarea, th, td { font-family: 'Pretendard GOV', sans-serif; }
         body { font-family: 'Pretendard GOV', sans-serif; }
         #clist .article-title { font-family: 'Pretendard GOV', sans-serif !important; }
-            body.swal2-shown { overflow-y: scroll !important; padding-right: 0 !important; }
-            .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
+        body.swal2-shown { overflow-y: scroll !important; padding-right: 0 !important; }
+        .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
     </style>
     <script src="js/sweetalert2@11.js"></script>
 </head>
@@ -128,7 +128,6 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                     <th width="80">No</th>
                     <th width="100">Thumb</th>
                     <th>Title</th>
-                    
                     <th width="80">Views</th>
                     <th width="120">Date</th>
                     <% IF LOWER(lcRole) = "admin" %>
@@ -139,10 +138,10 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
             <tbody>
                 <%
                 IF lnResult < 0
-                LOCAL ARRAY laError[1]
-                AERROR(laError)
-                Response.Write("<tr><td colspan='6' class='text-danger'>DB 오류: " + TRANSFORM(laError[2]) + "</td></tr>")
-            ELSE
+                    LOCAL ARRAY laError[1]
+                    AERROR(laError)
+                    Response.Write("<tr><td colspan='6' class='text-danger'>DB 오류: " + TRANSFORM(laError[2]) + "</td></tr>")
+                ELSE
                     SELECT curList
                     IF EOF()
                         Response.Write("<tr><td colspan='6'>There are no items for table view.</td></tr>")
@@ -164,7 +163,6 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
                                     <% ENDIF %>
                                 </td>
                                 <td class="text-start article-title align-middle"><%= TRANSFORM(curList.title) %></td>
-                                
                                 <td class="align-middle"><%= TRANSFORM(curList.views) %></td>
                                 <td class="align-middle"><%= lcDate %></td>
                                 <% IF LOWER(lcRole) = "admin" %>

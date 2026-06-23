@@ -1,15 +1,7 @@
 <%
 Response.AddHeader("Content-Type", "text/html; charset=euc-kr")
 
-LOCAL lcConnStr, lnHandle, lnResult, lnId, lcRole
-LOCAL lcTitle, lcContent, lcThumbnail
-
-lcRole = Request.QueryString("role")
-IF LOWER(lcRole) <> "admin"
-    Response.Write("<html><head><script src='js/sweetalert2@11.js'></script></head><body><script>Swal.fire({position:'top-end',icon:'error',title:'Permission denied.',showConfirmButton:false,timer:1500,toast:true,timerProgressBar:true}).then(()=>{location.href='board_list.fwx?role="+lcRole+"';});</script></body></html>")
-    RETURN
-ENDIF
-
+LOCAL lcConnStr, lnHandle, lnResult, lnId, lcRole, lcTitle, lcContent, lcThumbnail
 lcTitle = ""
 lcContent = ""
 lcThumbnail = ""
@@ -18,6 +10,7 @@ lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pi
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
 lnId = VAL(Request.QueryString("id"))
+lcRole = Request.QueryString("role")
 
 IF lnId > 0
     lnResult = SQLEXEC(lnHandle, "SELECT CAST(title AS CHAR(255) CHARACTER SET euckr) AS title, content, CAST(thumbnail AS CHAR(255) CHARACTER SET euckr) AS thumbnail FROM Articles WHERE id = ?lnId", "curArticle")
@@ -32,7 +25,7 @@ ENDIF
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta charset="euc-kr">
     <title><%= IIF(lnId > 0, 'EDIT ARTICLE', 'WRITE ARTICLE') %></title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/quill.snow.css" />
@@ -40,14 +33,13 @@ ENDIF
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&family=Black+Han+Sans&family=Jua&family=Do+Hyeon&family=Gothic+A1:wght@400;700&display=swap" rel="stylesheet">
     <link href="css/pretendard-gov.min.css" rel="stylesheet">
-        <style>
+    <style>
         body, input, button, select, textarea, th, td { font-family: 'Pretendard GOV', sans-serif; }
-        .ql-editor { font-size: 15px; white-space: normal; min-height: 400px; background-color: white; }
+        .ql-editor { font-size: 18px; white-space: normal; min-height: 400px; background-color: white; }
         #detail .content-body { font-family: 'Pretendard GOV', sans-serif; }
         #detail h4, #detail span, #clist .article-title, #write .form-control#title { font-family: 'Pretendard GOV', sans-serif !important; }
         .ql-toolbar.ql-snow { background-color: #f8f9fa; }
-        /* Quill Font Family Mapping */
-                .ql-editor .ql-font-pretendard-gov, .ql-font-pretendard-gov { font-family: 'Pretendard GOV', sans-serif !important; }
+        .ql-editor .ql-font-pretendard-gov, .ql-font-pretendard-gov { font-family: 'Pretendard GOV', sans-serif !important; }
         .ql-editor .ql-font-noto-sans-kr, .ql-font-noto-sans-kr { font-family: 'Noto Sans KR', sans-serif !important; }
         .ql-editor .ql-font-noto-serif-kr, .ql-font-noto-serif-kr { font-family: 'Noto Serif KR', sans-serif !important; }
         .ql-editor .ql-font-nanum-gothic, .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif !important; }
@@ -58,7 +50,7 @@ ENDIF
         .ql-editor .ql-font-do-hyeon, .ql-font-do-hyeon { font-family: 'Do Hyeon', sans-serif !important; }
         .ql-editor .ql-font-gothic-a1, .ql-font-gothic-a1 { font-family: 'Gothic A1', sans-serif !important; }
         .ql-editor .ql-font-malgun-gothic, .ql-font-malgun-gothic { font-family: 'Malgun Gothic', sans-serif !important; }
-        /* Quill Dropdown Korean Labels */
+        
         .ql-snow .ql-picker.ql-font .ql-picker-label::before,
         .ql-snow .ql-picker.ql-font .ql-picker-item::before { font-size: 13px; }
         .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="pretendard-gov"]::before,
@@ -83,8 +75,7 @@ ENDIF
         .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="gothic-a1"]::before { content: 'Gothic A1'; font-family: 'Gothic A1'; }
         .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="malgun-gothic"]::before,
         .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="malgun-gothic"]::before { content: 'Malgun Gothic'; font-family: 'Malgun Gothic'; }
-        .ql-snow .ql-picker.ql-font { width: 145px; }
-        /* Quill Size Dropdown Labels */
+
         .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: '10px'; }
         .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
@@ -109,17 +100,18 @@ ENDIF
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before { content: '48px'; }
         .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="72px"]::before,
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="72px"]::before { content: '72px'; }
-            body.swal2-shown { overflow-y: scroll !important; padding-right: 0 !important; }
-            .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
-            .ql-container.ql-snow { border: 1px solid #ccc !important; border-top: none !important; } .ql-toolbar.ql-snow { border: 1px solid #ccc !important; }
+        body.swal2-shown { overflow-y: scroll !important; padding-right: 0 !important; }
+        .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
+        .ql-container.ql-snow { border: 1px solid #ccc !important; border-top: none !important; } 
+        .ql-toolbar.ql-snow { border: 1px solid #ccc !important; }
     </style>
 </head>
 <body class="bg-light p-4">
 
 <div class="card mb-4" id="write">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <div class="fw-bold my-auto"><%= IIF(lnId > 0, 'EDIT ARTICLE', 'WRITE ARTICLE') %></div>
-                <div class="d-flex gap-1">
+        <div class="d-flex gap-1">
             <button type="button" class="btn btn-sm btn-primary btn-board fw-bold" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
             <a href="board_list.fwx?role=<%= lcRole %>" class='btn btn-sm btn-secondary btn-board fw-bold'>LIST</a>
         </div>
@@ -155,21 +147,20 @@ ENDIF
                             <input type="hidden" name="thumbnail_base64" id="thumbnail_base64" value="">
                         </div>
                         <div class="col-md-6">
-                            <div id="thumbnail_preview_container" style="display: <%= IIF(EMPTY(lcThumbnail), 'none', 'flex') %>; justify-content: center; align-items: center; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; min-height: 150px; background-color: #f8f9fa;">
-                                <img id="thumbnail_preview" src="<%= TRANSFORM(lcThumbnail) %>" style="max-height: 140px; border-radius:4px; object-fit:contain; max-width: 100%;">
+                            <div id="thumbnail_preview_container" style="display: <%= IIF(EMPTY(lcThumbnail), 'none', 'flex') %>; justify-content: center; align-items: center; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; min-height: 250px; background-color: #f8f9fa;">
+                                <img id="thumbnail_preview" src="<%= TRANSFORM(lcThumbnail) %>" style="max-height: 240px; border-radius:4px; object-fit:contain; max-width: 100%;">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-    
-            </form>
-        </div>
-        <div class="text-center pt-0 pb-3">
-            <button type="button" class="btn btn-sm btn-primary btn-board fw-bold mx-1" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
-            <a href="board_list.fwx?role=<%= lcRole %>" class="btn btn-sm btn-secondary btn-board fw-bold mx-1">LIST</a>
-        </div>
+        </form>
     </div>
+    <div class="text-center pt-0 pb-3">
+        <button type="button" class="btn btn-sm btn-primary btn-board fw-bold mx-1" onclick="document.getElementById('writeForm').requestSubmit()">SAVE</button>
+        <a href="board_list.fwx?role=<%= lcRole %>" class="btn btn-sm btn-secondary btn-board fw-bold mx-1">LIST</a>
+    </div>
+</div>
 
 <script src="js/sweetalert2@11.js"></script>
 <script src="js/quill.js"></script>

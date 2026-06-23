@@ -103,7 +103,7 @@ SQLDISCONNECT(lnHandle)
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta charset="euc-kr">
     <title>Processing...</title>
     <script src="js/sweetalert2@11.js"></script>
 </head>
