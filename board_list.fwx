@@ -26,7 +26,7 @@ IF lnPage < 1
     lnPage = 1
 ENDIF
 
-lnLimit = 20
+lnLimit = 5
 lnOffset = (lnPage - 1) * lnLimit
 lcSafeKeyword = STRTRAN(lcKeyword, "'", "\'")
 
@@ -101,9 +101,9 @@ lnResult = SQLEXEC(lnHandle, lcSQL, "curList")
 
 <div class="card mb-4" id="clist">
     <div class="card-header">
-        <div class="d-flex bd-highlight">
-            <div class="me-auto fw-bold my-auto">ARTICLE LISTS</div>
-            <div>
+        <div class="d-flex bd-highlight align-items-center">
+            <div class="me-auto fw-bold">ARTICLE LISTS</div>
+            <div style="min-height: 34px;">
                 <% IF LOWER(lcRole) = "admin" %>
                 <a href="board_write.fwx?role=<%= lcRole %>" class='btn btn-sm btn-dark btn-board'>ADD</a>
                 <% ENDIF %>
