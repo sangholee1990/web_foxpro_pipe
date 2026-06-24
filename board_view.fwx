@@ -5,6 +5,7 @@ LOCAL lcConnStr, lnHandle, lnResult, lcSQL, lnId
 LOCAL lcTitle, lcContent, lcThumbnail, lcUserId, lcCreateDt, lnViews
 
 lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+* lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 lcRole = Request.QueryString("role")
 
@@ -36,15 +37,31 @@ ENDIF
     <title><%= TRANSFORM(lcTitle) %></title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/quill.snow.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Noto+Serif+KR:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&family=Black+Han+Sans&family=Jua&family=Do+Hyeon&family=Gothic+A1:wght@400;700&display=swap" rel="stylesheet">
     <link href="css/pretendard-gov.min.css" rel="stylesheet">
     <script src="js/sweetalert2@11.js"></script>
     <style>
         body, input, button, select, textarea, th, td { font-family: 'Pretendard GOV', sans-serif; }
         #detail .content-body { font-family: 'Pretendard GOV', sans-serif; min-height: 300px; padding: 20px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff; }
-        #detail h4, #detail span { font-family: 'Pretendard GOV', sans-serif !important; }
+        #detail h4, #detail .card-header span { font-family: 'Pretendard GOV', sans-serif !important; }
         .btn-board { font-family: 'Pretendard GOV', sans-serif !important; min-width: 90px; height: 34px; line-height: 22px; font-size: 15px; padding: 5px 14px; font-weight: 500; }
-        .ql-editor { padding: 0; }
+        .ql-editor { padding: 0; font-size: 18px; white-space: normal; }
         .thumbnail-box { max-width: 100%; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Quill 폰트 클래스 지원 */
+        .ql-editor .ql-font-pretendard-gov, .ql-font-pretendard-gov { font-family: 'Pretendard GOV', sans-serif !important; }
+        .ql-editor .ql-font-noto-sans-kr, .ql-font-noto-sans-kr { font-family: 'Noto Sans KR', sans-serif !important; }
+        .ql-editor .ql-font-noto-serif-kr, .ql-font-noto-serif-kr { font-family: 'Noto Serif KR', sans-serif !important; }
+        .ql-editor .ql-font-nanum-gothic, .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif !important; }
+        .ql-editor .ql-font-nanum-myeongjo, .ql-font-nanum-myeongjo { font-family: 'Nanum Myeongjo', sans-serif !important; }
+        .ql-editor .ql-font-nanum-gothic-coding, .ql-font-nanum-gothic-coding { font-family: 'Nanum Gothic Coding', monospace !important; }
+        .ql-editor .ql-font-black-han-sans, .ql-font-black-han-sans { font-family: 'Black Han Sans', sans-serif !important; }
+        .ql-editor .ql-font-jua, .ql-font-jua { font-family: 'Jua', sans-serif !important; }
+        .ql-editor .ql-font-do-hyeon, .ql-font-do-hyeon { font-family: 'Do Hyeon', sans-serif !important; }
+        .ql-editor .ql-font-gothic-a1, .ql-font-gothic-a1 { font-family: 'Gothic A1', sans-serif !important; }
+        .ql-editor .ql-font-malgun-gothic, .ql-font-malgun-gothic { font-family: 'Malgun Gothic', sans-serif !important; }
     </style>
 </head>
 <body class="bg-light p-4">
@@ -58,11 +75,6 @@ ENDIF
         </div>
     </div>
     <div class="card-body">
-        <% IF NOT EMPTY(lcThumbnail) %>
-        <div class="text-center">
-            <img src="<%= TRANSFORM(lcThumbnail) %>" class="thumbnail-box" alt="Thumbnail">
-        </div>
-        <% ENDIF %>
         <div class="content-body ql-editor">
             <%= lcContent %>
         </div>

@@ -8,6 +8,7 @@ LOCAL ARRAY laError[1]
 SQLSETPROP(0, "DispLogin", 3)
 
 lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=49.247.41.71;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
+* lcConnStr = "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;Database=pipe;Uid=pipe;Pwd=pipe123!@;Port=3306;CharSet=euckr;Option=16384;"
 lnHandle = SQLSTRINGCONNECT(lcConnStr)
 
 * 에러 발생 시 구체적인 에러가 화면에 출력되도록 설정
