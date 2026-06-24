@@ -126,21 +126,21 @@ ENDIF
 
             <div class="row px-2 mb-3">
                 <div class="col-md-12 px-1">
-                    <label class="small fw-bold" for="title">Title</label>
+                    <label class="small fw-bold mb-2" for="title">Title</label>
                     <input type="text" class="form-control" name="title" id="title" value="<%= TRANSFORM(lcTitle) %>" required>
                 </div>
             </div>
 
             <div class="row px-2 mb-5 pb-3">
                 <div class="col-md-12 px-1">
-                    <label class="small fw-bold" for="content">Content</label>
+                    <label class="small fw-bold mb-2" for="content">Content</label>
                     <div id="quilleditor"></div><textarea id="raw_content" style="display:none;"><%= lcContent %></textarea>
                 </div>
             </div>
             
             <div class="row px-2 mb-3">
                 <div class="col-md-12 px-1">
-                    <label class="small fw-bold mt-3" for="thumbnail">Thumbnail Image</label>
+                    <label class="small fw-bold mt-3 mb-2" for="thumbnail">Thumbnail Image</label>
                     <div class="row">
                         <div class="col-md-6">
                             <input type="file" class="form-control" id="thumbnail_file" accept="image/*" onchange="previewThumbnail(this)">
